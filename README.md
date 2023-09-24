@@ -1,8 +1,6 @@
 此Repo為對應 15TH鐵人賽所建立，文章內容可參考
 https://ithelp.ithome.com.tw/users/20162436/ironman/6345
 
-**Another Little RISC-V ISA Simulator**
-​
 Another Little RISC-V ISA Simulator(ALISS)是我為這次的30天挑戰的side project所下的標題，顧名思義，
 主要的核心目標是要完成一個RISC-V的ISA層級模擬器，以C++進行撰寫，且這個模擬器必須是輕量的，並盡量能達到高效的目標。對標Spike做的100MIPS，我希望在接下來的二十天內所能完成的初版至少要能夠有20MIPS的速度，並會在後續繼續維護及優化。而若要以前面所提到的模擬器種類來進行區分，我們將目標訂為ISA模擬器，也就是"行為模擬器"，因此並不會去模擬時序，但希望能保留將來能擴充時間模擬的彈性。
 ​
