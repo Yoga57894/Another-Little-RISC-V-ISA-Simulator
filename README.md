@@ -1,4 +1,4 @@
-此Repo為對應ITHOME 15TH鐵人賽所建立，文章內容可參考  
+此Repo為對應ITHOME 15TH鐵人賽所建立，文章內容可參考
 https://ithelp.ithome.com.tw/users/20162436/ironman/6345  
 
 Another Little RISC-V ISA Simulator(ALISS)是我為這次的30天挑戰的side project所下的標題，顧名思義，  
