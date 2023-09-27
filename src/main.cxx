@@ -15,7 +15,7 @@ void ALISS::loadElf(const char* filename)
     file.read(reinterpret_cast<char*>(&elfHeader), sizeof(Elf64_Ehdr));
 
     // Check ELF magic number
-    if (memcmp(elfHeader.e_ident, ELFMAG, SELFMAG) != 0) {
+    if (std::memcmp(elfHeader.e_ident, ELFMAG, SELFMAG) != 0) {
         std::cerr << "Not a valid ELF file: " << filename << std::endl;
         return;
     }

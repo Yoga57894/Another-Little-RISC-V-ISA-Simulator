@@ -2,6 +2,7 @@
 #define __MAIN_HEADER
 
 #include <iostream>
+#include <cstring>
 #include <fstream>
 #include <vector>
 #include <elf.h>
