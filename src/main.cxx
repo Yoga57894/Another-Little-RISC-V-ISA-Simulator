@@ -1,4 +1,13 @@
-#include<iostream>
+#include "main.h"
+
+
+
+void ALISS::loadElf(const char* elf_name)
+{
+
+
+	return;
+}
 
 int main(int argc, char** argv)
 {
@@ -34,10 +43,12 @@ int main(int argc, char** argv)
 	if(show_help)
 	{
 		std::cout << "Help Help" << std::endl;
+		return 0;
 	}
 	else
 	{
 		std::cout << elf_name << std::endl;
+		ALISS::loadElf(elf_name);
 	}
 
 	return 0;

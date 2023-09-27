@@ -12,6 +12,9 @@ set(TEST_FILES src/test_main.cxx)
 
 add_executable(ALISS ${SOURCE_FILES})
 add_executable(ALISS_TEST ${TEST_FILES})
+
+include_directories(include)
+
 target_link_libraries(ALISS_TEST gtest GTest::GTest GTest::Main)
 
 add_test(MAIN_TEST ALISS_TEST)
