@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "main.h"
 
-void ALISS::loadElf(const char* filename)
+void ALISS::loadElf(const char* filename) //XXX should be refactor, not need to implement twice
 {
     // ELF loader function
     std::ifstream file(filename, std::ios::binary);
@@ -36,7 +36,6 @@ void ALISS::loadElf(const char* filename)
     // Get the entry point address
     Elf64_Addr entryPoint = elfHeader.e_entry;
     ALISS::pc = entryPoint;
-
 
     // Add more code here to load and work with program segments, sections, etc.
 
