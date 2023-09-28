@@ -38,17 +38,51 @@ void ALISS::loadElf(const char* filename) //XXX should be refactor, not need to 
     ALISS::pc = entryPoint;
 
     // Add more code here to load and work with program segments, sections, etc.
+    for (int i = 0; i < elfHeader.e_phnum; i++) {
+        file.seekg(elfHeader.e_phoff + i * sizeof(Elf64_Phdr));
+
+        Elf64_Phdr programHeader;
+        file.read(reinterpret_cast<char*>(&programHeader), sizeof(Elf64_Phdr));
+
+        // Check if this is a loadable segment
+        if (programHeader.p_type == PT_LOAD) {
+            // Save flags, address, and size
+            Elf64_Word flags = programHeader.p_flags;
+            Elf64_Addr addr = programHeader.p_vaddr;
+            Elf64_Xword size = programHeader.p_memsz;
+
+            // Seek to the segment's file offset
+            file.seekg(programHeader.p_offset);
+
+            // Read the segment data to memory
+            file.read(reinterpret_cast<char*>(ALISS::memory + addr), size);
+        }
+    }
+
 
     file.close();
 	return;
+}
+
+unsigned ALISS::get_mem_w(unsigned long long  int addr)
+{
+    return *(uint32_t*)(ALISS::memory + addr);
 }
 
 TEST(MyTestSuite, MyTestCase) {
     ASSERT_TRUE(true);
 }
 
-TEST(MyTestSuite, ELFLoaderTest) {
+TEST(MyTestSuite, ELFLoaderTest_entryPoint) {
     const char* test = "test.elf";
+    ALISS::memory = (uint8_t *)std::malloc(4 * 1024 * 1024); //4MB size for test
     ALISS::loadElf(test);
     EXPECT_EQ(ALISS::pc, 0x10116);
+}
+
+TEST(MyTestSuite, ELFLoaderTest_FirstInst) {
+    const char* test = "test.elf";
+    ALISS::memory = (uint8_t *)std::malloc(4 * 1024 * 1024); //4MB size for test
+    ALISS::loadElf(test);
+    EXPECT_EQ(ALISS::get_mem_w(0x10116), 0x4197);
 }

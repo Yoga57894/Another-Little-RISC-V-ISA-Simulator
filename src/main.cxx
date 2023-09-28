@@ -1,5 +1,10 @@
 #include "main.h"
 
+unsigned ALISS::get_mem_w(unsigned long long  int addr)
+{
+    return *(uint32_t*)(ALISS::memory + addr);
+}
+
 void ALISS::loadElf(const char* filename)
 {
     // ELF loader function
@@ -37,6 +42,26 @@ void ALISS::loadElf(const char* filename)
     ALISS::pc = entryPoint;
 
     // Add more code here to load and work with program segments, sections, etc.
+   for (int i = 0; i < elfHeader.e_phnum; i++) {
+        file.seekg(elfHeader.e_phoff + i * sizeof(Elf64_Phdr));
+
+        Elf64_Phdr programHeader;
+        file.read(reinterpret_cast<char*>(&programHeader), sizeof(Elf64_Phdr));
+
+        // Check if this is a loadable segment
+        if (programHeader.p_type == PT_LOAD) {
+            // Save flags, address, and size
+            Elf64_Word flags = programHeader.p_flags;
+            Elf64_Addr addr = programHeader.p_vaddr;
+            Elf64_Xword size = programHeader.p_memsz;
+
+            // Seek to the segment's file offset
+            file.seekg(programHeader.p_offset);
+
+            // Read the segment data to memory
+            file.read(reinterpret_cast<char*>(ALISS::memory + addr), size);
+        }
+    }
 
     file.close();
 	return;

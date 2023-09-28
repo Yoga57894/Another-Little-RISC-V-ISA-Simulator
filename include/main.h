@@ -11,7 +11,8 @@
 namespace ALISS
 {
     void loadElf(const char* elf_name);
-    static std::unordered_map<uint64_t,uint64_t> memory;
+    unsigned get_mem_w(unsigned long long addr);
+    static uint8_t* memory = 0;
     static uint64_t pc;
 }
 
