@@ -15,6 +15,9 @@ namespace ALISS
     static uint64_t next_pc;
     static uint64_t reg[32];
 
+    int64_t sext(uint64_t insn, int len) { return int64_t(insn) << (64 - len) >> (64 - len); }
+
+
     bool loadElf(const char* filename) //XXX should be refactor, not need to implement twice
     {
         // ELF loader function
@@ -117,8 +120,9 @@ namespace ALISS
                            }
                            default:
                            {
-                                printf("no insn or not implement :");
-                                printf("%d\n",(insn >> 25) & 0x7f);
+
+                                printf("Illegal instruction");
+                                printf("%x\n",insn);
                                 break;
                            }
                         }
@@ -160,8 +164,8 @@ namespace ALISS
                            }
                            default:
                            {
-                                printf("no insn or not implement :");
-                                printf("%d\n",(insn >> 25) & 0x7f);
+                                printf("Illegal instruction");
+                                printf("%x\n",insn);
                                 break;
                            }
                         }
@@ -179,7 +183,84 @@ namespace ALISS
                     }
                     default:
                     {
-                        printf("no insn or not implement");
+                        printf("Illegal instruction");
+                        printf("%x\n",insn);
+                        break;
+                    }
+                }
+                break;
+            }
+            case 0x13:
+            {
+                uint64_t rd = ((insn >> 7) & 0x1f);
+                uint64_t rs1 = ((insn  >> 15) & 0x1f);
+                uint64_t imm = ((insn >> 20) & 0xfff);
+                switch ((insn >> 12) & 7)
+                {
+                    case 0x0: //ADDI
+                    {
+                        reg[rd] =  reg[rs1] +  sext(imm, 12);
+                        break;
+                    }
+                    case 0x1: //SLLI
+                    {
+                        uint64_t shamt = imm & 0x1f; //[24:20]
+                        reg[rd] = reg[rs1] << shamt;
+                        break;
+                    }
+                    case 0x2: //SLTI
+                    {
+                        reg[rd] = ((int64_t)reg[rs1] < sext(imm, 12));
+                        break;
+                    }
+                    case 0x3: //SLTUI
+                    {
+                        reg[rd] = (reg[rs1] < imm);
+                        break;
+                    }
+                    case 0x4: //XORI
+                    {
+                        reg[rd] = (reg[rs1] ^ sext(imm, 12));
+                        break;
+                    }
+                    case 0x5: //SRLI & SRAI
+                    {
+                        uint64_t shamt = imm & 0x1f; //[24:20]
+                        switch ((insn >> 25) & 0x7f)
+                        {
+                            case 0x0 : //SRLI
+                            {
+                                reg[rd] =  reg[rs1] >> shamt;
+                                break;
+                            }
+                            case 0x20 : //SRAI
+                            {
+                                reg[rd] =  (int64_t)reg[rs1] >> shamt;
+                                break;
+                            }
+                           default:
+                           {
+                                printf("Illegal instruction");
+                                printf("%x\n",insn);
+                                break;
+                           }
+                        }
+                        break;
+                    }
+                    case 0x6: //ORI
+                    {
+                        reg[rd] = (reg[rs1] | sext(imm, 12));
+                        break;
+                    }
+                    case 0x7: //ANDI
+                    {
+                        reg[rd] = (reg[rs1] & sext(imm, 12));
+                        break;
+                    }
+                    default:
+                    {
+                        printf("Illegal instruction");
+                        printf("%x\n",insn);
                         break;
                     }
                 }
@@ -187,7 +268,8 @@ namespace ALISS
             }
             default:
             {
-                printf("no insn or not implement");
+                printf("Illegal instruction");
+                printf("%x\n",insn);
                 break;
             }
         }
