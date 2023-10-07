@@ -573,3 +573,91 @@ TEST(ISATESTSuite, csrrci_0x7cc_0x10)
     EXPECT_EQ(ALISS::reg[10], 0x1010101010101010 ); //reg is ori value;
 }
 
+TEST(ISATESTSuite, ADDIW0x80000000_0x1)
+{
+    ALISS::reg[10] = 0x0;
+    ALISS::reg[11] = 0x80000000;
+    uint32_t insn = 0x0015851b; // addiw a0 a1 1
+    ALISS::ID_EX_WB(insn);
+    EXPECT_EQ(ALISS::reg[10], 0xFFFFFFFF80000001); 
+}
+
+TEST(ISATESTSuite, SLLIW_1_0)
+{
+    ALISS::reg[10] = 0x0;
+    ALISS::reg[11] = 0xffffffff12345678;
+    uint32_t insn = 0x0005951b; // slliw a0 a1 0
+    ALISS::ID_EX_WB(insn);
+    EXPECT_EQ(ALISS::reg[10], 0x12345678); 
+}
+
+
+TEST(ISATESTSuite, SRLIW_ffffffffffffffff_5)
+{
+    ALISS::reg[10] = 0x0;
+    ALISS::reg[11] = 0xffffffff12345678;
+    uint32_t insn = 0x0005d51b; // srliw a0 a1 0
+    ALISS::ID_EX_WB(insn);
+    EXPECT_EQ(ALISS::reg[10], 0x12345678 ); 
+}
+
+TEST(ISATESTSuite, SRAIW_ffffffffffffffff_5)
+{
+    ALISS::reg[10] = 0x0;
+    ALISS::reg[11] = 0xffffffff12345678;
+    uint32_t insn = 0x4005d51b; // sraiw a0 a1 0
+    ALISS::ID_EX_WB(insn);
+    EXPECT_EQ(ALISS::reg[10], 0x12345678 ); 
+}
+
+TEST(ISATESTSuite, ADDW0x80000000_0x1)
+{
+    ALISS::reg[10] = 0x0;
+    ALISS::reg[11] = 0x80000000;
+    ALISS::reg[12] = 0x1;
+    uint32_t insn = 0x00c5853b; // addw a0 a1 a2
+    ALISS::ID_EX_WB(insn);
+    EXPECT_EQ(ALISS::reg[10], 0xFFFFFFFF80000001); //3 + 7 = 10;
+}
+
+TEST(ISATESTSuite, SUB0x80000000_0x1)
+{
+    ALISS::reg[10] = 0x0;
+    ALISS::reg[11] = 0x80000001;
+    ALISS::reg[12] = 0x1;
+    uint32_t insn = 0x40c5853b; // subw a0 a1 a2
+    ALISS::ID_EX_WB(insn);
+    EXPECT_EQ(ALISS::reg[10], 0xFFFFFFFF80000000); //3 + 7 = 10;
+}
+
+TEST(ISATESTSuite, SLLW_1_0)
+{
+    ALISS::reg[10] = 0x0;
+    ALISS::reg[11] = 0xffffffff12345678;
+    ALISS::reg[12] = 0x0;
+    uint32_t insn = 0x00c5953b; // sllw a0 a1 a2
+    ALISS::ID_EX_WB(insn);
+    EXPECT_EQ(ALISS::reg[10], 0x12345678); 
+}
+
+
+TEST(ISATESTSuite, SRLW_ffffffffffffffff_5)
+{
+    ALISS::reg[10] = 0x0;
+    ALISS::reg[11] = 0xffffffff12345678;
+    ALISS::reg[12] = 0x0;
+    uint32_t insn = 0x00c5d53b; // srlw a0 a1 a2
+    ALISS::ID_EX_WB(insn);
+    EXPECT_EQ(ALISS::reg[10], 0x12345678 ); 
+}
+
+TEST(ISATESTSuite, SRAW_ffffffffffffffff_5)
+{
+    ALISS::reg[10] = 0x0;
+    ALISS::reg[11] = 0xffffffff12345678;
+    ALISS::reg[12] = 0x0;
+    uint32_t insn = 0x40c5d53b; // sraw a0 a1 a2
+    ALISS::ID_EX_WB(insn);
+    EXPECT_EQ(ALISS::reg[10], 0x12345678 ); 
+}
+

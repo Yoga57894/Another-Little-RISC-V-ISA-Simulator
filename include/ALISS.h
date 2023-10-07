@@ -164,6 +164,11 @@ namespace ALISS
                         reg[rd] = sext(get_mem_w(reg[rs1] + sext(imm,12)),32);
                         break;
                     }
+                    case 3: //LD
+                    {
+                        reg[rd] = get_mem_d(reg[rs1] + sext(imm,12));
+                        break;
+                    }
                     case 4: //LBU
                     {
                         reg[rd] = get_mem_b(reg[rs1] + sext(imm,12));
@@ -172,6 +177,11 @@ namespace ALISS
                     case 5:  //LHU
                     {
                         reg[rd] = get_mem_h(reg[rs1] + sext(imm,12));
+                        break;
+                    }
+                    case 6:  //LWU
+                    {
+                        reg[rd] = get_mem_w(reg[rs1] + sext(imm,12));
                         break;
                     }
                     default:
@@ -260,6 +270,57 @@ namespace ALISS
                 }
                 break;
             }
+            case 0x1b: //OP-IMM-32
+            {
+                uint64_t rd = ((insn >> 7) & 0x1f);
+                uint64_t rs1 = ((insn  >> 15) & 0x1f);
+                uint64_t imm = ((insn >> 20) & 0xfff);
+                switch ((insn >> 12) & 7)
+                {
+                    case 0x0: //ADDIW
+                    {
+                        reg[rd] =  sext(((reg[rs1] +  sext(imm, 12)) & 0xffffffff),32);
+                        break;
+                    }
+                    case 0x1: //SLLIW
+                    {
+                        uint64_t shamt = imm & 0x1f; //[24:20]
+                        reg[rd] = sext((reg[rs1] << shamt)  & 0xffffffff,32);
+                        break;
+                    }
+                    case 0x5: //SRLIW & SRAIW
+                    {
+                        uint64_t shamt = imm & 0x1f; //[24:20]
+                        switch ((insn >> 25) & 0x7f)
+                        {
+                            case 0x0 : //SRLIW
+                            {
+                                reg[rd] =  sext((reg[rs1] >> shamt) & 0xffffffff,32);
+                                break;
+                            }
+                            case 0x20 : //SRAIW
+                            {
+                                reg[rd] =  sext(((int64_t)reg[rs1] >> shamt) & 0xffffffff,32);
+                                break;
+                            }
+                           default:
+                           {
+                                printf("Illegal instruction");
+                                printf("%x\n",insn);
+                                break;
+                           }
+                        }
+                        break;
+                    }
+                    default:
+                    {
+                        printf("Illegal instruction");
+                        printf("%x\n",insn);
+                        break;
+                    }
+                }
+                break;
+            }
             case 0x23: //STORE
             {
                 uint64_t rs1 = ((insn  >> 15) & 0x1f);
@@ -284,6 +345,11 @@ namespace ALISS
                         set_mem_w(reg[rs1] + sext(imm,12), (uint32_t)reg[rs2]);
                         break;
                     }
+                    case 3: //SD
+                    {
+                        set_mem_d(reg[rs1] + sext(imm,12), (uint64_t)reg[rs2]);
+                        break;
+                    }
                     default:
                     {
                          printf("Illegal instruction");
@@ -295,7 +361,7 @@ namespace ALISS
 
                 break;
             }
-            case 0x33:
+            case 0x33: //OP
             {
                 uint64_t rd = ((insn >> 7) & 0x1f);
                 uint64_t rs1 = ((insn  >> 15) & 0x1f);
@@ -377,6 +443,74 @@ namespace ALISS
                     case 0x7: //AND
                     {
                         reg[rd] = reg[rs1] & reg[rs2];
+                        break;
+                    }
+                    default:
+                    {
+                        printf("Illegal instruction");
+                        printf("%x\n",insn);
+                        break;
+                    }
+                }
+                break;
+            }
+            case 0x3b: //OP-32bit
+            {
+                uint64_t rd = ((insn >> 7) & 0x1f);
+                uint64_t rs1 = ((insn  >> 15) & 0x1f);
+                uint64_t rs2 = ((insn  >> 20) & 0x1f);
+                switch ((insn >> 12) & 7)
+                {
+                    case 0x0: //ADDW or SUBW
+                    {
+                        switch ((insn >> 25) & 0x7f)
+                        {
+                           case 0x0 : //ADDW
+                           {
+                                reg[rd] =  sext((reg[rs1] + reg[rs2]) & 0xffffffff,32);
+                                break;
+                           }
+                           case 0x20 :  //SUBW
+                           {
+                                reg[rd] = sext((reg[rs1] - reg[rs2]) &  0xffffffff,32);
+                                break;
+                           }
+                           default:
+                           {
+
+                                printf("Illegal instruction");
+                                printf("%x\n",insn);
+                                break;
+                           }
+                        }
+                        break;
+                    }
+                    case 0x1: //SLLW
+                    {
+                        reg[rd] = sext((reg[rs1] << reg[rs2])  & 0xffffffff,32);
+                        break;
+                    }
+                    case 0x5: //SRLW or SRAW
+                    {
+                        switch ((insn >> 25) & 0x7f)
+                        {
+                           case 0x0 : //SRLW
+                           {
+                                reg[rd] =  sext((reg[rs1] >> reg[rs2]) &  0xffffffff,32);
+                                break;
+                           }
+                           case 0x20 : //SRAW
+                           {
+                                reg[rd] = sext(((int64_t)reg[rs1] >> reg[rs2]) & 0xffffffff,32);
+                                break;
+                           }
+                           default:
+                           {
+                                printf("Illegal instruction");
+                                printf("%x\n",insn);
+                                break;
+                           }
+                        }
                         break;
                     }
                     default:
