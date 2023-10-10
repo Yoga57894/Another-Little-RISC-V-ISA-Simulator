@@ -640,7 +640,6 @@ TEST(ISATESTSuite, SLLW_1_0)
     EXPECT_EQ(ALISS::reg[10], 0x12345678); 
 }
 
-
 TEST(ISATESTSuite, SRLW_ffffffffffffffff_5)
 {
     ALISS::reg[10] = 0x0;
@@ -661,3 +660,48 @@ TEST(ISATESTSuite, SRAW_ffffffffffffffff_5)
     EXPECT_EQ(ALISS::reg[10], 0x12345678 ); 
 }
 
+TEST(ISATESTSuite, LUI)
+{
+    ALISS::reg[10] = 0x0;
+    uint32_t insn = 0x00001537; // lui,a0, 0x1
+    ALISS::ID_EX_WB(insn);
+    EXPECT_EQ(ALISS::reg[10], 0x1000 ); 
+}
+
+TEST(ISATESTSuite, AUIPC)
+{
+    ALISS::pc = 0x1000;
+    ALISS::reg[10] = 0x0;
+    uint32_t insn = 0x00001517; // auipc a0 0x1
+    ALISS::ID_EX_WB(insn);
+    EXPECT_EQ(ALISS::reg[10], 0x2000); 
+}
+
+TEST(ISATESTSuite, EBREAK)
+{
+    ALISS::csr[0x305] = 0x8000;
+    ALISS::pc = 0x1000;
+    uint32_t insn = 0x00100073; // ebreak;
+    ALISS::ID_EX_WB(insn);
+    EXPECT_EQ(ALISS::csr[0x341], 0x1000); 
+    EXPECT_EQ(ALISS::next_pc, 0x8000); // jump to mtvec
+}
+
+TEST(ISATESTSuite, ECALL)
+{
+    ALISS::csr[0x305] = 0x8000;
+    ALISS::pc = 0x1000;
+    uint32_t insn = 0x00000073; // ecall;
+    ALISS::ID_EX_WB(insn);
+    EXPECT_EQ(ALISS::csr[0x341], 0x1000);  //epc = 0x1000
+    EXPECT_EQ(ALISS::next_pc, 0x8000); // jump to mtvec
+}
+
+TEST(ISATESTSuite, MRET)
+{
+    ALISS::pc = 0x0;
+    ALISS::csr[0x341] = 0x1000;
+    uint32_t insn = 0x30200073; // mret
+    ALISS::ID_EX_WB(insn);
+    EXPECT_EQ(ALISS::next_pc, 0x1000);  //ret to epc
+}

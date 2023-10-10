@@ -194,6 +194,10 @@ namespace ALISS
                 }
                 break;
             }
+            case 0xf: //fence
+            {
+               break; 
+            }
             case 0x13: //I-type ALU
             {
                 uint64_t rd = ((insn >> 7) & 0x1f);
@@ -268,6 +272,13 @@ namespace ALISS
                         break;
                     }
                 }
+                break;
+            }
+            case 0x17: //AUIPC
+            {
+                uint64_t rd = ((insn >> 7) & 0x1f);
+                uint64_t imm = ((insn >> 12) & 0xfffff);
+                reg[rd] = pc + sext((imm << 12),32);
                 break;
             }
             case 0x1b: //OP-IMM-32
@@ -454,6 +465,13 @@ namespace ALISS
                 }
                 break;
             }
+            case 0x37: //lui
+            {
+                uint64_t rd = ((insn >> 7) & 0x1f);
+                uint64_t imm = ((insn >> 12) & 0xfffff);
+                reg[rd] = sext((imm << 12),32);
+                break;
+            }
             case 0x3b: //OP-32bit
             {
                 uint64_t rd = ((insn >> 7) & 0x1f);
@@ -607,7 +625,43 @@ namespace ALISS
                 uint64_t rd = ((insn >> 7) & 0x1f);
                 switch ((insn >> 12) & 7)
                 {
-                     case 1: //csrrw
+                    case 0: //System 
+                    {
+                        uint64_t systemop = csrno;
+                        switch(systemop)
+                        {
+                            case 0x0: //ecall
+                            {
+                                csr[0x341] = pc; //epc = pc
+                                next_pc = csr[0x305]; //mtvec = 0x305
+                                break;
+                            }
+                            case 0x1: //ebreak
+                            {
+                                csr[0x341] = pc;
+                                next_pc = csr[0x305]; // mtvec = 0x305
+                                break;
+                            }
+                            case 0x105: // wfi
+                            {
+                                //implement as nop ...
+                                break;
+                            }
+                            case 0x302: //mret
+                            {
+                                next_pc = csr[0x341]; //epc = 0x341
+                                break;
+                            }
+                            default:
+                            {
+                              printf("Illegal instruction");
+                              printf("%x\n",insn);
+                              break;
+                            }
+                        }
+                        break;
+                    }
+                    case 1: //csrrw
                     {
                         reg[rd]  = csr[csrno];
                         csr[csrno] = reg[rs1];

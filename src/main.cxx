@@ -5,6 +5,7 @@ int main(int argc, char** argv)
 	int i = 0 ;
 	const char * elf_name = 0;
 	bool show_help;
+    ALISS::memory = (uint8_t *)std::malloc(4 * 1024 * 1024); //4MB size for test
 
 	for( i = 1; i < argc; i++ )
 	{
@@ -33,7 +34,7 @@ int main(int argc, char** argv)
 
 	if(show_help)
 	{
-		std::cout << "Help Help" << std::endl;
+		std::cout << "-e elf to load elf file" << std::endl;
 		return 0;
 	}
 	else
@@ -46,7 +47,10 @@ int main(int argc, char** argv)
         }
 	}
 
-    ALISS::run_pipe();
+	while(1)
+	{
+ 	   ALISS::run_pipe();
+	}
 
 	return 0;
 }
