@@ -39,7 +39,7 @@ TEST(ID_EX_WB_TestSuite, PCNextTest) {
 
 /*ISA Test*/
 
-TEST(ISATESTSuite, ADD3_7)
+TEST(ISATESTSuiteALU, ADD3_7)
 {
     ALISS::reg[10] = 0x0;
     ALISS::reg[11] = 3;
@@ -49,7 +49,7 @@ TEST(ISATESTSuite, ADD3_7)
     EXPECT_EQ(ALISS::reg[10], 0xa); //3 + 7 = 10;
 }
 
-TEST(ISATESTSuite, ADDN1_1)
+TEST(ISATESTSuiteALU, ADDN1_1)
 {
     ALISS::reg[11] = 0x0;
     ALISS::reg[10] = 0xffffffffffffffff;
@@ -59,7 +59,7 @@ TEST(ISATESTSuite, ADDN1_1)
     EXPECT_EQ(ALISS::reg[11], 0); //1 + -1 = 0;
 }
 
-TEST(ISATESTSuite, ADDN1_N1)
+TEST(ISATESTSuiteALU, ADDN1_N1)
 {
     ALISS::reg[11] = 0x0;
     ALISS::reg[10] = 0xffffffffffffffff;
@@ -69,7 +69,7 @@ TEST(ISATESTSuite, ADDN1_N1)
     EXPECT_EQ(ALISS::reg[11], 0xfffffffffffffffe); //-1 + -1  = -2;
 }
 
-TEST(ISATESTSuite, SUBN1_N1)
+TEST(ISATESTSuiteALU, SUBN1_N1)
 {
     ALISS::reg[10] = 0x0;
     ALISS::reg[11] = 0xffffffffffffffff;
@@ -79,7 +79,7 @@ TEST(ISATESTSuite, SUBN1_N1)
     EXPECT_EQ(ALISS::reg[10], 0x0); //-1 - -1  = 0;
 }
 
-TEST(ISATESTSuite, SLL_1_7)
+TEST(ISATESTSuiteALU, SLL_1_7)
 {
     ALISS::reg[10] = 0x0;
     ALISS::reg[11] = 0x1;
@@ -89,7 +89,7 @@ TEST(ISATESTSuite, SLL_1_7)
     EXPECT_EQ(ALISS::reg[10], 0x80); // (1 << 7) = 128
 }
 
-TEST(ISATESTSuite, SLT_1_f)
+TEST(ISATESTSuiteALU, SLT_1_f)
 {
     ALISS::reg[10] = 0x0;
     ALISS::reg[11] = 0x1;
@@ -99,7 +99,7 @@ TEST(ISATESTSuite, SLT_1_f)
     EXPECT_EQ(ALISS::reg[10], 0x1); // (1 < f) == 1
 }
 
-TEST(ISATESTSuite, SLT_f_1)
+TEST(ISATESTSuiteALU, SLT_f_1)
 {
     ALISS::reg[10] = 0x0;
     ALISS::reg[11] = 0xf;
@@ -109,7 +109,7 @@ TEST(ISATESTSuite, SLT_f_1)
     EXPECT_EQ(ALISS::reg[10], 0x0); // (f < 1) == 0
 }
 
-TEST(ISATESTSuite, SLT_0_ffffffffffffffff)
+TEST(ISATESTSuiteALU, SLT_0_ffffffffffffffff)
 {
     ALISS::reg[10] = 0x0;
     ALISS::reg[11] = 0x0;
@@ -119,7 +119,7 @@ TEST(ISATESTSuite, SLT_0_ffffffffffffffff)
     EXPECT_EQ(ALISS::reg[10], 0x0); // (0 < -1) == 0
 }
 
-TEST(ISATESTSuite, SLTU_0_ffffffffffffffff)
+TEST(ISATESTSuiteALU, SLTU_0_ffffffffffffffff)
 {
     ALISS::reg[10] = 0x0;
     ALISS::reg[11] = 0x0;
@@ -129,7 +129,7 @@ TEST(ISATESTSuite, SLTU_0_ffffffffffffffff)
     EXPECT_EQ(ALISS::reg[10], 0x1); // (0 < (unsigned)ffffffffffffffff) = 1
 }
 
-TEST(ISATESTSuite, XOR_0f000f00_ff00ff00)
+TEST(ISATESTSuiteALU, XOR_0f000f00_ff00ff00)
 {
     ALISS::reg[10] = 0x0;
     ALISS::reg[11] = 0x0f0f0f0f;
@@ -139,7 +139,7 @@ TEST(ISATESTSuite, XOR_0f000f00_ff00ff00)
     EXPECT_EQ(ALISS::reg[10], 0xf00ff00f ); //0x0f0f0f0f ^ 0xff00ff00 = 0xf00ff00f;
 }
 
-TEST(ISATESTSuite, SRL_ffffffffffffffff_5)
+TEST(ISATESTSuiteALU, SRL_ffffffffffffffff_5)
 {
     ALISS::reg[10] = 0x0;
     ALISS::reg[11] = 0xffffffffffffffff;
@@ -149,7 +149,7 @@ TEST(ISATESTSuite, SRL_ffffffffffffffff_5)
     EXPECT_EQ(ALISS::reg[10], 0x07ffffffffffffff ); //0xffffffffffffffff srl 5 = 07ffffffffffffff;
 }
 
-TEST(ISATESTSuite, SRA_ffffffffffffffff_5)
+TEST(ISATESTSuiteALU, SRA_ffffffffffffffff_5)
 {
     ALISS::reg[10] = 0x0;
     ALISS::reg[11] = 0xffffffffffffffff;
@@ -159,7 +159,7 @@ TEST(ISATESTSuite, SRA_ffffffffffffffff_5)
     EXPECT_EQ(ALISS::reg[10], 0xffffffffffffffff ); //0xffffffffffffffff sra 5 = ffffffffffffffff;
 }
 
-TEST(ISATESTSuite, OR_0f000f00_ff00ff00)
+TEST(ISATESTSuiteALU, OR_0f000f00_ff00ff00)
 {
     ALISS::reg[10] = 0x0;
     ALISS::reg[11] = 0x0f0f0f0f;
@@ -169,7 +169,7 @@ TEST(ISATESTSuite, OR_0f000f00_ff00ff00)
     EXPECT_EQ(ALISS::reg[10], 0xff0fff0f ); //0x0f0f0f0f | 0xff00ff00 = 0xff0fff0f;
 }
 
-TEST(ISATESTSuite, AND_0f000f00_ff00ff00)
+TEST(ISATESTSuiteALU, AND_0f000f00_ff00ff00)
 {
     ALISS::reg[10] = 0x0;
     ALISS::reg[11] = 0x0f0f0f0f;
@@ -179,7 +179,7 @@ TEST(ISATESTSuite, AND_0f000f00_ff00ff00)
     EXPECT_EQ(ALISS::reg[10], 0x0f000f00 ); //0x0f0f0f0f & 0xff00ff00 = 0x0f000f00;
 }
 
-TEST(ISATESTSuite, ADDI3_7)
+TEST(ISATESTSuiteALU, ADDI3_7)
 {
     ALISS::reg[11] = 3;
     //ALISS::reg[12] = 7;
@@ -188,7 +188,7 @@ TEST(ISATESTSuite, ADDI3_7)
     EXPECT_EQ(ALISS::reg[10], 0xa); //3 + 7 = 10;
 }
 
-TEST(ISATESTSuite, ADDI1_N800)
+TEST(ISATESTSuiteALU, ADDI1_N800)
 {
     ALISS::reg[10] = 800;
     //ALISS::reg[12] = 0x1;
@@ -197,7 +197,7 @@ TEST(ISATESTSuite, ADDI1_N800)
     EXPECT_EQ(ALISS::reg[11], 0); //800 + -800 = 0;
 }
 
-TEST(ISATESTSuite, SLLI_1_7)
+TEST(ISATESTSuiteALU, SLLI_1_7)
 {
     ALISS::reg[10] = 0x0;
     ALISS::reg[11] = 0x1;
@@ -206,7 +206,7 @@ TEST(ISATESTSuite, SLLI_1_7)
     EXPECT_EQ(ALISS::reg[10], 0x80); // (1 << 7) = 128
 }
 
-TEST(ISATESTSuite, SLTI_1_f)
+TEST(ISATESTSuiteALU, SLTI_1_f)
 {
     ALISS::reg[10] = 0x0;
     ALISS::reg[11] = 0x1;
@@ -215,7 +215,7 @@ TEST(ISATESTSuite, SLTI_1_f)
     EXPECT_EQ(ALISS::reg[10], 0x1); // (1 < f) == 1
 }
 
-TEST(ISATESTSuite, SLTI_f_1)
+TEST(ISATESTSuiteALU, SLTI_f_1)
 {
     ALISS::reg[10] = 0x0;
     ALISS::reg[11] = 0xf;
@@ -224,7 +224,7 @@ TEST(ISATESTSuite, SLTI_f_1)
     EXPECT_EQ(ALISS::reg[10], 0x0); // (f < 1) == 0
 }
 
-TEST(ISATESTSuite, SLTI_0_fff)
+TEST(ISATESTSuiteALU, SLTI_0_fff)
 {
     ALISS::reg[10] = 0x0;
     ALISS::reg[11] = 0x0;
@@ -243,7 +243,7 @@ TEST(ISATESTSuite, SLTIU_0_fff)
     EXPECT_EQ(ALISS::reg[10], 0x1); // (0 < (unsigned)ffffffffffffffff) = 1
 }
 
-TEST(ISATESTSuite, XORI_0f000f00_ff00)
+TEST(ISATESTSuiteALU, XORI_0f000f00_ff00)
 {
     ALISS::reg[10] = 0x0;
     ALISS::reg[11] = 0x0f0f0f0f;
@@ -252,7 +252,7 @@ TEST(ISATESTSuite, XORI_0f000f00_ff00)
     EXPECT_EQ(ALISS::reg[10], 0xfffffffff0f0f00f ); //0x0f0f0f0f ^ 0xffffffffffffff00 = 0xffffffff0f0ff00f;
 }
 
-TEST(ISATESTSuite, SRLI_ffffffffffffffff_5)
+TEST(ISATESTSuiteALU, SRLI_ffffffffffffffff_5)
 {
     ALISS::reg[10] = 0x0;
     ALISS::reg[11] = 0xffffffffffffffff;
@@ -261,7 +261,7 @@ TEST(ISATESTSuite, SRLI_ffffffffffffffff_5)
     EXPECT_EQ(ALISS::reg[10], 0x07ffffffffffffff ); //0xffffffffffffffff srli 5 = ffffffffffffffff;
 }
 
-TEST(ISATESTSuite, SRAI_ffffffffffffffff_5)
+TEST(ISATESTSuiteALU, SRAI_ffffffffffffffff_5)
 {
     ALISS::reg[10] = 0x0;
     ALISS::reg[11] = 0xffffffffffffffff;
@@ -279,7 +279,7 @@ TEST(ISATESTSuite, ORI_0f000f00_ff00)
     EXPECT_EQ(ALISS::reg[10], 0xffffffffffffff0f ); //0x0f0f0f0f | 0xffffffffffffff00 = 0xffffffffffffff0f;
 }
 
-TEST(ISATESTSuite, ANDI_0f000f00_ff00)
+TEST(ISATESTSuiteALU, ANDI_0f000f00_ff00)
 {
     ALISS::reg[10] = 0x0;
     ALISS::reg[11] = 0x0f0f0f0f;
@@ -288,7 +288,7 @@ TEST(ISATESTSuite, ANDI_0f000f00_ff00)
     EXPECT_EQ(ALISS::reg[10], 0x0f0f0f00 ); //0x0f0f0f0f & 0xfffffffffffffff00 = 0x0f0f0f00;
 }
 
-TEST(ISATESTSuite, JALR_0x100_N128)
+TEST(ISATESTSuiteCTI, JALR_0x100_N128)
 {
     ALISS::pc = 0x100;
 
@@ -300,7 +300,7 @@ TEST(ISATESTSuite, JALR_0x100_N128)
     EXPECT_EQ(ALISS::next_pc, 0x80 ); //pc = 0x80;
 }
 
-TEST(ISATESTSuite, JAL_0x100_N128)
+TEST(ISATESTSuiteCTI, JAL_0x100_N128)
 {
     ALISS::pc = 0x100;
 
@@ -311,7 +311,7 @@ TEST(ISATESTSuite, JAL_0x100_N128)
     EXPECT_EQ(ALISS::next_pc, 0x80 ); //pc = 0x80;
 }
 
-TEST(ISATESTSuite, BEQ_0x100_N128)
+TEST(ISATESTSuiteCTI, BEQ_0x100_N128)
 {
     ALISS::pc = 0x100;
 
@@ -322,7 +322,7 @@ TEST(ISATESTSuite, BEQ_0x100_N128)
     EXPECT_EQ(ALISS::next_pc, 0x80 ); //pc = 0x80;
 }
 
-TEST(ISATESTSuite, BNE_0x100_N128)
+TEST(ISATESTSuiteCTI, BNE_0x100_N128)
 {
     ALISS::pc = 0x100;
 
@@ -333,7 +333,7 @@ TEST(ISATESTSuite, BNE_0x100_N128)
     EXPECT_EQ(ALISS::next_pc, 0x80 ); //pc = 0x80;
 }
 
-TEST(ISATESTSuite, BLT_0x100_N128)
+TEST(ISATESTSuiteCTI, BLT_0x100_N128)
 {
     ALISS::pc = 0x100;
 
@@ -344,7 +344,7 @@ TEST(ISATESTSuite, BLT_0x100_N128)
     EXPECT_EQ(ALISS::next_pc, 0x80 ); //pc = 0x80;
 }
 
-TEST(ISATESTSuite, BGE_0x100_N128)
+TEST(ISATESTSuiteCTI, BGE_0x100_N128)
 {
     ALISS::pc = 0x100;
 
@@ -355,7 +355,7 @@ TEST(ISATESTSuite, BGE_0x100_N128)
     EXPECT_EQ(ALISS::next_pc, 0x80 ); //pc = 0x80;
 }
 
-TEST(ISATESTSuite, BLTU_0x100_N128)
+TEST(ISATESTSuiteCTI, BLTU_0x100_N128)
 {
     ALISS::pc = 0x100;
 
@@ -367,7 +367,7 @@ TEST(ISATESTSuite, BLTU_0x100_N128)
 }
 
 
-TEST(ISATESTSuite, BGEU_0x100_N128)
+TEST(ISATESTSuiteCTI, BGEU_0x100_N128)
 {
     ALISS::pc = 0x100;
 
@@ -379,7 +379,7 @@ TEST(ISATESTSuite, BGEU_0x100_N128)
     EXPECT_EQ(ALISS::next_pc, 0x80 ); //pc = 0x80;
 }
 
-TEST(ISATESTSuite, LB_0x40000_0xffffffff88888888)
+TEST(ISATESTSuiteLS, LB_0x40000_0xffffffff88888888)
 {
     ALISS::memory = (uint8_t *)std::malloc(4 * 1024 * 1024); //4MB size for test
     uint64_t* memory64  = (uint64_t*)ALISS::memory;
@@ -395,7 +395,7 @@ TEST(ISATESTSuite, LB_0x40000_0xffffffff88888888)
     free(ALISS::memory);
 }
 
-TEST(ISATESTSuite, LBU_0x40000_0xffffffff88888888)
+TEST(ISATESTSuiteLS, LBU_0x40000_0xffffffff88888888)
 {
     ALISS::memory = (uint8_t *)std::malloc(4 * 1024 * 1024); //4MB size for test
     uint64_t* memory64  = (uint64_t*)ALISS::memory;
@@ -411,7 +411,7 @@ TEST(ISATESTSuite, LBU_0x40000_0xffffffff88888888)
     free(ALISS::memory);
 }
 
-TEST(ISATESTSuite, LH_0x40000_0xffffffff88888888)
+TEST(ISATESTSuiteLS, LH_0x40000_0xffffffff88888888)
 {
     ALISS::memory = (uint8_t *)std::malloc(4 * 1024 * 1024); //4MB size for test
     uint64_t* memory64  = (uint64_t*)ALISS::memory;
@@ -427,7 +427,7 @@ TEST(ISATESTSuite, LH_0x40000_0xffffffff88888888)
     free(ALISS::memory);
 }
 
-TEST(ISATESTSuite, LHU_0x40000_0xffffffff88888888)
+TEST(ISATESTSuiteLS, LHU_0x40000_0xffffffff88888888)
 {
     ALISS::memory = (uint8_t *)std::malloc(4 * 1024 * 1024); //4MB size for test
     uint64_t* memory64  = (uint64_t*)ALISS::memory;
@@ -443,7 +443,7 @@ TEST(ISATESTSuite, LHU_0x40000_0xffffffff88888888)
     free(ALISS::memory);
 }
 
-TEST(ISATESTSuite, LW_0x40000_0xffffffff88888888)
+TEST(ISATESTSuiteLS, LW_0x40000_0xffffffff88888888)
 {
     ALISS::memory = (uint8_t *)std::malloc(4 * 1024 * 1024); //4MB size for test
     uint64_t* memory64  = (uint64_t*)ALISS::memory;
@@ -459,7 +459,7 @@ TEST(ISATESTSuite, LW_0x40000_0xffffffff88888888)
     free(ALISS::memory);
 }
 
-TEST(ISATESTSuite, SB_0x40000_0xffffffff88888888)
+TEST(ISATESTSuiteLS, SB_0x40000_0xffffffff88888888)
 {
     ALISS::memory = (uint8_t *)std::malloc(4 * 1024 * 1024); //4MB size for test
 
@@ -476,7 +476,7 @@ TEST(ISATESTSuite, SB_0x40000_0xffffffff88888888)
     free(ALISS::memory);
 }
 
-TEST(ISATESTSuite, SH_0x40000_0xffffffff88888888)
+TEST(ISATESTSuiteLS, SH_0x40000_0xffffffff88888888)
 {
     ALISS::memory = (uint8_t *)std::malloc(4 * 1024 * 1024); //4MB size for test
 
@@ -493,7 +493,7 @@ TEST(ISATESTSuite, SH_0x40000_0xffffffff88888888)
     free(ALISS::memory);
 }
 
-TEST(ISATESTSuite, SW_0x40000_0xffffffff88888888)
+TEST(ISATESTSuiteLS, SW_0x40000_0xffffffff88888888)
 {
     ALISS::memory = (uint8_t *)std::malloc(4 * 1024 * 1024); //4MB size for test
 
@@ -510,7 +510,7 @@ TEST(ISATESTSuite, SW_0x40000_0xffffffff88888888)
     free(ALISS::memory);
 }
 
-TEST(ISATESTSuite, csrrw_0x7cc_0x1234)
+TEST(ISATESTSuiteCSR, csrrw_0x7cc_0x1234)
 {
     ALISS::csr[0x7cc] = 0x1010101010101010;
     ALISS::reg[10] = 0x0;
@@ -521,7 +521,7 @@ TEST(ISATESTSuite, csrrw_0x7cc_0x1234)
     EXPECT_EQ(ALISS::reg[10], 0x1010101010101010 ); //reg  is ori value;
 }
 
-TEST(ISATESTSuite, csrrs_0x7cc_0x101)
+TEST(ISATESTSuiteCSR, csrrs_0x7cc_0x101)
 {
     ALISS::csr[0x7cc] = 0x1010101010101010;
     ALISS::reg[10] = 0x0;
@@ -532,7 +532,7 @@ TEST(ISATESTSuite, csrrs_0x7cc_0x101)
     EXPECT_EQ(ALISS::reg[10], 0x1010101010101010 ); //reg is ori value;
 }
 
-TEST(ISATESTSuite, csrrc_0x7cc_0x1010)
+TEST(ISATESTSuiteCSR, csrrc_0x7cc_0x1010)
 {
     ALISS::csr[0x7cc] = 0x1010101010101010;
     ALISS::reg[10] = 0x0;
@@ -543,7 +543,7 @@ TEST(ISATESTSuite, csrrc_0x7cc_0x1010)
     EXPECT_EQ(ALISS::reg[10], 0x1010101010101010 ); //reg is ori value;
 }
 
-TEST(ISATESTSuite, csrrwi_0x7cc_0x2)
+TEST(ISATESTSuiteCSR, csrrwi_0x7cc_0x2)
 {
     ALISS::csr[0x7cc] = 0x1010101010101010;
     ALISS::reg[10] = 0x0;
@@ -553,7 +553,7 @@ TEST(ISATESTSuite, csrrwi_0x7cc_0x2)
     EXPECT_EQ(ALISS::reg[10], 0x1010101010101010 ); //reg  is ori value;
 }
 
-TEST(ISATESTSuite, csrrsi_0x7cc_0x1)
+TEST(ISATESTSuiteCSR, csrrsi_0x7cc_0x1)
 {
     ALISS::csr[0x7cc] = 0x1010101010101010;
     ALISS::reg[10] = 0x0;
@@ -563,7 +563,7 @@ TEST(ISATESTSuite, csrrsi_0x7cc_0x1)
     EXPECT_EQ(ALISS::reg[10], 0x1010101010101010 ); //reg is ori value;
 }
 
-TEST(ISATESTSuite, csrrci_0x7cc_0x10)
+TEST(ISATESTSuiteCSR, csrrci_0x7cc_0x10)
 {
     ALISS::csr[0x7cc] = 0x1010101010101010;
     ALISS::reg[10] = 0x0;
@@ -573,7 +573,7 @@ TEST(ISATESTSuite, csrrci_0x7cc_0x10)
     EXPECT_EQ(ALISS::reg[10], 0x1010101010101010 ); //reg is ori value;
 }
 
-TEST(ISATESTSuite, ADDIW0x80000000_0x1)
+TEST(ISATESTSuiteALU, ADDIW0x80000000_0x1)
 {
     ALISS::reg[10] = 0x0;
     ALISS::reg[11] = 0x80000000;
@@ -582,7 +582,7 @@ TEST(ISATESTSuite, ADDIW0x80000000_0x1)
     EXPECT_EQ(ALISS::reg[10], 0xFFFFFFFF80000001); 
 }
 
-TEST(ISATESTSuite, SLLIW_1_0)
+TEST(ISATESTSuiteALU, SLLIW_1_0)
 {
     ALISS::reg[10] = 0x0;
     ALISS::reg[11] = 0xffffffff12345678;
@@ -592,7 +592,7 @@ TEST(ISATESTSuite, SLLIW_1_0)
 }
 
 
-TEST(ISATESTSuite, SRLIW_ffffffffffffffff_5)
+TEST(ISATESTSuiteALU, SRLIW_ffffffffffffffff_5)
 {
     ALISS::reg[10] = 0x0;
     ALISS::reg[11] = 0xffffffff12345678;
@@ -601,7 +601,7 @@ TEST(ISATESTSuite, SRLIW_ffffffffffffffff_5)
     EXPECT_EQ(ALISS::reg[10], 0x12345678 ); 
 }
 
-TEST(ISATESTSuite, SRAIW_ffffffffffffffff_5)
+TEST(ISATESTSuiteALU, SRAIW_ffffffffffffffff_5)
 {
     ALISS::reg[10] = 0x0;
     ALISS::reg[11] = 0xffffffff12345678;
@@ -610,7 +610,7 @@ TEST(ISATESTSuite, SRAIW_ffffffffffffffff_5)
     EXPECT_EQ(ALISS::reg[10], 0x12345678 ); 
 }
 
-TEST(ISATESTSuite, ADDW0x80000000_0x1)
+TEST(ISATESTSuiteALU, ADDW0x80000000_0x1)
 {
     ALISS::reg[10] = 0x0;
     ALISS::reg[11] = 0x80000000;
@@ -620,7 +620,7 @@ TEST(ISATESTSuite, ADDW0x80000000_0x1)
     EXPECT_EQ(ALISS::reg[10], 0xFFFFFFFF80000001); //3 + 7 = 10;
 }
 
-TEST(ISATESTSuite, SUB0x80000000_0x1)
+TEST(ISATESTSuiteALU, SUB0x80000000_0x1)
 {
     ALISS::reg[10] = 0x0;
     ALISS::reg[11] = 0x80000001;
@@ -630,7 +630,7 @@ TEST(ISATESTSuite, SUB0x80000000_0x1)
     EXPECT_EQ(ALISS::reg[10], 0xFFFFFFFF80000000); //3 + 7 = 10;
 }
 
-TEST(ISATESTSuite, SLLW_1_0)
+TEST(ISATESTSuiteALU, SLLW_1_0)
 {
     ALISS::reg[10] = 0x0;
     ALISS::reg[11] = 0xffffffff12345678;
@@ -640,7 +640,7 @@ TEST(ISATESTSuite, SLLW_1_0)
     EXPECT_EQ(ALISS::reg[10], 0x12345678); 
 }
 
-TEST(ISATESTSuite, SRLW_ffffffffffffffff_5)
+TEST(ISATESTSuiteALU, SRLW_ffffffffffffffff_5)
 {
     ALISS::reg[10] = 0x0;
     ALISS::reg[11] = 0xffffffff12345678;
@@ -650,7 +650,7 @@ TEST(ISATESTSuite, SRLW_ffffffffffffffff_5)
     EXPECT_EQ(ALISS::reg[10], 0x12345678 ); 
 }
 
-TEST(ISATESTSuite, SRAW_ffffffffffffffff_5)
+TEST(ISATESTSuiteALU, SRAW_ffffffffffffffff_5)
 {
     ALISS::reg[10] = 0x0;
     ALISS::reg[11] = 0xffffffff12345678;
@@ -660,7 +660,7 @@ TEST(ISATESTSuite, SRAW_ffffffffffffffff_5)
     EXPECT_EQ(ALISS::reg[10], 0x12345678 ); 
 }
 
-TEST(ISATESTSuite, LUI)
+TEST(ISATESTSuiteALU, LUI)
 {
     ALISS::reg[10] = 0x0;
     uint32_t insn = 0x00001537; // lui,a0, 0x1
@@ -668,7 +668,7 @@ TEST(ISATESTSuite, LUI)
     EXPECT_EQ(ALISS::reg[10], 0x1000 ); 
 }
 
-TEST(ISATESTSuite, AUIPC)
+TEST(ISATESTSuiteALU, AUIPC)
 {
     ALISS::pc = 0x1000;
     ALISS::reg[10] = 0x0;
@@ -677,7 +677,7 @@ TEST(ISATESTSuite, AUIPC)
     EXPECT_EQ(ALISS::reg[10], 0x2000); 
 }
 
-TEST(ISATESTSuite, EBREAK)
+TEST(ISATESTSuiteSYS, EBREAK)
 {
     ALISS::csr[0x305] = 0x8000;
     ALISS::pc = 0x1000;
@@ -687,7 +687,7 @@ TEST(ISATESTSuite, EBREAK)
     EXPECT_EQ(ALISS::next_pc, 0x8000); // jump to mtvec
 }
 
-TEST(ISATESTSuite, ECALL)
+TEST(ISATESTSuiteSYS, ECALL)
 {
     ALISS::csr[0x305] = 0x8000;
     ALISS::pc = 0x1000;
@@ -697,11 +697,68 @@ TEST(ISATESTSuite, ECALL)
     EXPECT_EQ(ALISS::next_pc, 0x8000); // jump to mtvec
 }
 
-TEST(ISATESTSuite, MRET)
+TEST(ISATESTSuiteSYS, MRET)
 {
     ALISS::pc = 0x0;
     ALISS::csr[0x341] = 0x1000;
     uint32_t insn = 0x30200073; // mret
     ALISS::ID_EX_WB(insn);
     EXPECT_EQ(ALISS::next_pc, 0x1000);  //ret to epc
+}
+
+TEST(ISATESTSuiteLRSC, LR_W)
+{
+    ALISS::memory = (uint8_t *)std::malloc(4 * 1024 * 1024); //4MB size for test
+    uint64_t* memory64  = (uint64_t*)ALISS::memory;
+    memory64[0x40000 / 8] = 0xffffffff88888888;
+    ALISS::reg[10] = 0x0;
+    ALISS::reg[11] = 0x40000;
+
+    ALISS::reservation = false;
+    uint32_t insn = 0x1005a52f; // lr a0, a1
+    ALISS::ID_EX_WB(insn);
+    EXPECT_EQ(ALISS::reg[10], -2004318072 ); //load -2004318072;
+    EXPECT_EQ(ALISS::reservation, true);  
+    
+    free(ALISS::memory);
+}
+
+TEST(ISATESTSuiteLRSC, SC_W_FAIL)
+{
+    ALISS::memory = (uint8_t *)std::malloc(4 * 1024 * 1024); //4MB size for test
+    uint64_t* memory64  = (uint64_t*)ALISS::memory;
+    memory64[0x40000 / 8] = 0;
+
+    ALISS::reg[10] = 0x0;
+    ALISS::reg[11] = 0xaaaa;
+    ALISS::reg[12] = 0x40000;
+
+    ALISS::reservation = false;
+    uint32_t insn = 0x18b6252f; // sc a0, a1, a2
+    ALISS::ID_EX_WB(insn);
+
+    EXPECT_EQ(memory64[0x40000 / 8], 0 ); //0 // failure
+    EXPECT_EQ(ALISS::reg[10], 1 ); //1 //failure
+
+    free(ALISS::memory);
+}
+
+TEST(ISATESTSuiteLRSC, SC_W_SUCCESS)
+{
+    ALISS::memory = (uint8_t *)std::malloc(4 * 1024 * 1024); //4MB size for test
+    uint64_t* memory64  = (uint64_t*)ALISS::memory;
+    memory64[0x40000 / 8] = 0;
+
+    ALISS::reg[10] = 0x0;
+    ALISS::reg[11] = 0xaaaa;
+    ALISS::reg[12] = 0x40000;
+
+    ALISS::reservation = true;
+    uint32_t insn = 0x18b6252f; // sc a0, a1, a2
+    ALISS::ID_EX_WB(insn);
+
+    EXPECT_EQ(memory64[0x40000 / 8], 0xaaaa ); 
+    EXPECT_EQ(ALISS::reg[10], 0 ); //0 //success
+
+    free(ALISS::memory);
 }

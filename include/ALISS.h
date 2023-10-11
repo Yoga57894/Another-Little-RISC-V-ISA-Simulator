@@ -14,7 +14,9 @@ namespace ALISS
     static uint64_t pc;
     static uint64_t next_pc;
     static uint64_t reg[32];
+    static bool reservation = 0;
     static std::unordered_map<uint32_t,uint64_t> csr;
+
 
     int64_t sext(uint64_t insn, int len) { return int64_t(insn) << (64 - len) >> (64 - len); }
 
@@ -372,6 +374,191 @@ namespace ALISS
 
                 break;
             }
+            case 0x2f: //A-EXTENSION
+            {
+                uint64_t rd = ((insn >> 7) & 0x1f);
+                uint64_t rs1 = ((insn  >> 15) & 0x1f);
+                uint64_t rs2 = ((insn  >> 20) & 0x1f);
+                switch ((insn >> 12) & 7) //func3
+                {
+                    case 0x2: // A32
+                    {
+                        switch((insn >> 27 ) & 0x1f)
+                        {
+                            case 0x2: //LR.W
+                            {
+                                reg[rd] = sext(get_mem_w(reg[rs1]),32);
+                                reservation = true;
+                                break;
+                            }
+                            case 0x3: //SC.W
+                            {
+                                if(reservation)
+                                {
+                                    set_mem_w(reg[rs1], (uint32_t)reg[rs2]);
+                                    reg[rd] = 0;
+                                }
+                                else
+                                {
+
+                                    reg[rd] = 1;
+                                }
+                                reservation = false;
+                                break;
+                            }
+                            case 0x1: //AMOSWP.W
+                            {
+                                reg[rd] = sext(get_mem_w(reg[rs1]),32);
+                                set_mem_w(reg[rs1], (uint32_t)reg[rs2]);
+                                break;
+                            }
+                            case 0x0: //AMOADD.W
+                            {
+                                reg[rd] = sext(get_mem_w(reg[rs1]),32);
+                                set_mem_w(reg[rs1], (uint32_t)reg[rs2] + (uint32_t)reg[rd]);
+                                break;
+                            }
+                            case 0x4: //AMOXOR.W
+                            {
+                                reg[rd] = sext(get_mem_w(reg[rs1]),32);
+                                set_mem_w(reg[rs1], (uint32_t)reg[rs2] ^ (uint32_t)reg[rd]);
+                                break;
+                            }
+                            case 0xc: //AMOAND.W
+                            {
+                                reg[rd] = sext(get_mem_w(reg[rs1]),32);
+                                set_mem_w(reg[rs1], (uint32_t)reg[rs2] & (uint32_t)reg[rd]);
+                                break;
+                            }
+                            case 0x8: //AMOOR.W
+                            {
+                                reg[rd] = sext(get_mem_w(reg[rs1]),32);
+                                set_mem_w(reg[rs1], (uint32_t)reg[rs2] | (uint32_t)reg[rd]);
+                                break;
+                            }
+                            case 0x10: //AMOMIN.W
+                            {
+                                reg[rd] = sext(get_mem_w(reg[rs1]),32);
+                                set_mem_w(reg[rs1], (int32_t)reg[rs2] < (int32_t)reg[rd] ? (uint32_t)reg[rs2] : (uint32_t)reg[rd] );
+                                break;
+                            }
+                            case 0x14: //AMOMAX.W
+                            {
+                                reg[rd] = sext(get_mem_w(reg[rs1]),32);
+                                set_mem_w(reg[rs1], (int32_t)reg[rs2] > (int32_t)reg[rd] ? (uint32_t)reg[rs2] : (uint32_t)reg[rd] );
+                                break;
+                            }
+                            case 0x18: //AMOMINU.W
+                            {
+                                reg[rd] = sext(get_mem_w(reg[rs1]),32);
+                                set_mem_w(reg[rs1], (uint32_t)reg[rs2] < (uint32_t)reg[rd] ? (uint32_t)reg[rs2] : (uint32_t)reg[rd] );
+                                break;
+                            }
+                            case 0x1c: //AMOMAXU.W
+                            {
+                                reg[rd] = sext(get_mem_w(reg[rs1]),32);
+                                set_mem_w(reg[rs1], (uint32_t)reg[rs2] > (uint32_t)reg[rd] ? (uint32_t)reg[rs2] : (uint32_t)reg[rd] );
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                    case 0x3: // A64
+                    {
+                        switch((insn >> 27 ) & 0x1f)
+                        {
+                            case 0x2: //LR.D
+                            {
+                                reg[rd] = get_mem_d(reg[rs1]);
+                                reservation = true;
+                                break;
+                            }
+                            case 0x3: //SC.D
+                            {
+                                if(reservation)
+                                {
+                                    set_mem_d(reg[rs1], reg[rs2]);
+                                    reg[rd] = 0;
+                                }
+                                else
+                                {
+
+                                    reg[rd] = 1;
+                                }
+                                reservation = false;
+                                break;
+                            }
+                            case 0x1: //AMOSWP.D
+                            {
+                                reg[rd] = get_mem_d(reg[rs1]);
+                                set_mem_d(reg[rs1], reg[rs2]);
+                                break;
+                            }
+                            case 0x0: //AMOADD.D
+                            {
+                                reg[rd] = get_mem_d(reg[rs1]);
+                                set_mem_d(reg[rs1], reg[rs2] + reg[rd]);
+                                break;
+                            }
+                            case 0x4: //AMOXOR.D
+                            {
+                                reg[rd] = get_mem_d(reg[rs1]);
+                                set_mem_d(reg[rs1], reg[rs2] ^ reg[rd]);
+                                break;
+                                }
+                            case 0xc: //AMOAND.D
+                            {
+                                reg[rd] = get_mem_d(reg[rs1]);
+                                set_mem_d(reg[rs1], reg[rs2] & reg[rd]);
+                                break;
+                            }
+                            case 0x8: //AMOOR.D
+                            {
+                                reg[rd] = get_mem_d(reg[rs1]);
+                                set_mem_d(reg[rs1], reg[rs2] | reg[rd]);
+                                break;
+                            }
+                            case 0x10: //AMOMIN.D
+                            {
+                                reg[rd] = get_mem_d(reg[rs1]);
+                                set_mem_d(reg[rs1], (int64_t)reg[rs2] < (int64_t)reg[rd] ? reg[rs2] : reg[rd] );
+                                break;
+                            }
+                            case 0x14: //AMOMAX.D
+                            {
+                                reg[rd] = get_mem_d(reg[rs1]);
+                                set_mem_d(reg[rs1], (int64_t)reg[rs2] > (int64_t)reg[rd] ? reg[rs2] : reg[rd] );
+                                break;
+                            }
+                            case 0x18: //AMOMINU.D
+                            {
+                                reg[rd] = get_mem_d(reg[rs1]);
+                                set_mem_d(reg[rs1], reg[rs2] < reg[rd] ? reg[rs2] : reg[rd] );
+                                break;
+                            }
+                            case 0x1c: //AMOMAXU.D
+                            {
+                                reg[rd] = get_mem_d(reg[rs1]);
+                                set_mem_d(reg[rs1], reg[rs2] > reg[rd] ? reg[rs2] : reg[rd] );
+                                break;
+                            }
+                            default:
+                            {
+                                printf("Illegal instruction");
+                                printf("%x\n",insn);
+                                break;
+                            }
+                        }
+                        break;
+
+                    }
+                    default:
+                    {
+                        break;
+                    }
+                }
+                break;
+            }
             case 0x33: //OP
             {
                 uint64_t rd = ((insn >> 7) & 0x1f);
@@ -395,7 +582,6 @@ namespace ALISS
                            }
                            default:
                            {
-
                                 printf("Illegal instruction");
                                 printf("%x\n",insn);
                                 break;
