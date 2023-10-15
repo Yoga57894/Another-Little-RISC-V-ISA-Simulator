@@ -762,3 +762,63 @@ TEST(ISATESTSuiteLRSC, SC_W_SUCCESS)
 
     free(ALISS::memory);
 }
+
+TEST(ISATESTSuiteMPU, MUL_11_N13)
+{
+    ALISS::reg[10] = 0x0;
+    ALISS::reg[11] = 11;
+    ALISS::reg[12] = -13;
+    uint32_t insn = 0x02c58533; // mul a0, a1, a2
+    ALISS::ID_EX_WB(insn);
+    EXPECT_EQ(ALISS::reg[10], -143); //11 * 13 = -143;
+}
+
+TEST(ISATESTSuiteMPU, MULH_11_13)
+{
+    ALISS::reg[10] = 0x0;
+    ALISS::reg[11] = ((int64_t)11 << 32);
+    ALISS::reg[12] = ((int64_t)13 << 32);
+    uint32_t insn = 0x02c59533; // mulh a0, a1, a2
+    ALISS::ID_EX_WB(insn);
+    EXPECT_EQ(ALISS::reg[10], 143); //11 * 13 = 143;
+}
+
+TEST(ISATESTSuiteMPU, DIV_10_5)
+{
+    ALISS::reg[10] = 0x0;
+    ALISS::reg[11] = 10;
+    ALISS::reg[12] = 5;
+    uint32_t insn = 0x02c5c533; // div a0, a1, a2
+    ALISS::ID_EX_WB(insn);
+    EXPECT_EQ(ALISS::reg[10], 2); //10 / 5 = 2;
+}
+
+TEST(ISATESTSuiteMPU, REM_11_5)
+{
+    ALISS::reg[10] = 0x0;
+    ALISS::reg[11] = 11;
+    ALISS::reg[12] = 5;
+    uint32_t insn = 0x02c5e533; // rem a0, a1, a2
+    ALISS::ID_EX_WB(insn);
+    EXPECT_EQ(ALISS::reg[10], 1); //11 % 5 = 1;
+}
+
+TEST(ISATESTSuiteMPU, MULHU_11_13)
+{
+    ALISS::reg[10] = 0x0;
+    ALISS::reg[11] = ((int64_t)11 << 32);
+    ALISS::reg[12] = ((int64_t)13 << 32);
+    uint32_t insn = 0x02c5b533; // mulh a0, a1, a2
+    ALISS::ID_EX_WB(insn);
+    EXPECT_EQ(ALISS::reg[10], 143); //11 * 13 = 143;
+}
+
+TEST(ISATESTSuiteMPU, MULHSU_11_13)
+{
+    ALISS::reg[10] = 0x0;
+    ALISS::reg[11] = ((int64_t)11 << 32);
+    ALISS::reg[12] = ((int64_t)13 << 32);
+    uint32_t insn = 0x02c5a533; // mulh a0, a1, a2
+    ALISS::ID_EX_WB(insn);
+    EXPECT_EQ(ALISS::reg[10], 143); //11 * 13 = 143;
+}

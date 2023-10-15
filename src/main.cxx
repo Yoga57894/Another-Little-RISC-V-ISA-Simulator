@@ -4,8 +4,9 @@ int main(int argc, char** argv)
 {
 	int i = 0 ;
 	const char * elf_name = 0;
+	const char * dtb_name = 0;
 	bool show_help;
-    ALISS::memory = (uint8_t *)std::malloc(4 * 1024 * 1024); //4MB size for test
+    ALISS::memory = (uint8_t *)std::malloc(4ULL * 1024 * 1024 * 1024); //4GB size
 
 	for( i = 1; i < argc; i++ )
 	{
@@ -16,7 +17,9 @@ int main(int argc, char** argv)
 			switch( param[1] )
 			{
 				case 'e': elf_name = (++i < argc) ? argv[i] : 0; break;
+				case 'b': dtb_name = (++i < argc) ? argv[i] : 0; break;
 				case 'h': show_help = 1; break;
+				case 'd': ALISS::debug_mode = true; break;
 			default:
 					std::cout  << "No command " << param[1] << std::endl;
 					show_help = 1;
@@ -43,8 +46,18 @@ int main(int argc, char** argv)
 		if(ALISS::loadElf(elf_name))
         {
 		    std::cout << "Load ELF Error" << std::endl;
-            return 0;
+            return 1;
         }
+
+
+#ifndef BAREMETAL
+		std::cout << dtb_name << std::endl;	
+		if(ALISS::loadDTB(dtb_name,0x1234))
+		{
+			std::cout <<"Load DTB Error" << std::endl;
+			return 1;
+		}
+#endif
 	}
 
 	while(1)

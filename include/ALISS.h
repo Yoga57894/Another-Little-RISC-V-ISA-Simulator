@@ -1,6 +1,9 @@
 #ifndef __MAIN_HEADER
 #define __MAIN_HEADER
 
+//#define BAREMETAL
+//#define INSN_DEBUG
+
 #include <iostream>
 #include <cstring>
 #include <fstream>
@@ -10,18 +13,77 @@
 
 namespace ALISS
 {
+
+    static bool debug_mode = false;
+
     static uint8_t* memory = 0;
     static uint64_t pc;
     static uint64_t next_pc;
     static uint64_t reg[32];
+    static std::string insn_type;
     static bool reservation = 0;
     static std::unordered_map<uint32_t,uint64_t> csr;
 
+    void dump_insn(uint32_t insn)
+    {
+        printf("pc = %016lx , insn = %08x \n",pc,insn);
+        for(uint32_t i = 0 ; i < 4 ; i ++)
+        {
+            for(uint32_t j = 0 ; j < 8 ; j ++)
+            {
+                printf("reg[%02d] = %016lx ,", i * 8 + j ,reg[i*8+j]);
 
-    int64_t sext(uint64_t insn, int len) { return int64_t(insn) << (64 - len) >> (64 - len); }
+            }
+            printf("\n");
+        }
+        //printf("%016lx\n",reg[10]);
+        //std::cout <<  insn_type <<  std::endl;
+        printf("/////////////////////////////////////////////////////\n");
+        printf("/////////////////////////////////////////////////////\n");
+    }
 
 
-    bool loadElf(const char* filename) //XXX should be refactor, not need to implement twice
+    inline int64_t sext(uint64_t insn, int len) { return int64_t(insn) << (64 - len) >> (64 - len); }
+
+    //ref : https://github.com/riscv-software-src/riscv-isa-sim
+
+    inline uint64_t mulhu(uint64_t a, uint64_t b)
+    {
+      uint64_t t;
+      uint32_t y1, y2, y3;
+      uint64_t a0 = (uint32_t)a, a1 = a >> 32;
+      uint64_t b0 = (uint32_t)b, b1 = b >> 32;
+
+      t = a1*b0 + ((a0*b0) >> 32);
+      y1 = t;
+      y2 = t >> 32;
+
+      t = a0*b1 + y1;
+
+      t = a1*b1 + y2 + (t >> 32);
+      y2 = t;
+      y3 = t >> 32;
+
+      return ((uint64_t)y3 << 32) | y2;
+    }
+
+    inline int64_t mulh(int64_t a, int64_t b)
+    {
+      int negate = (a < 0) != (b < 0);
+      uint64_t res = mulhu(a < 0 ? -a : a, b < 0 ? -b : b);
+      return negate ? ~res + (a * b == 0) : res;
+    }
+
+    inline int64_t mulhsu(int64_t a, uint64_t b)
+    {
+      int negate = a < 0;
+      uint64_t res = mulhu(a < 0 ? -a : a, b);
+      return negate ? ~res + (a * b == 0) : res;
+    }
+
+    ///
+
+    bool loadElf(const char* filename)
     {
         // ELF loader function
         std::ifstream file(filename, std::ios::binary);
@@ -84,6 +146,48 @@ namespace ALISS
     	return 0;
     };
 
+    bool loadDTB(const char* filename, uint64_t dtb_addr )
+    {
+        // Open the file
+        FILE* file = fopen(filename, "rb");
+        if (file == NULL) {
+            perror("Failed to open the file");
+            exit(EXIT_FAILURE);
+        }
+
+        // Get the file size
+        fseek(file, 0, SEEK_END);
+        long file_size = ftell(file);
+        rewind(file);
+
+        // Allocate memory to store the file content
+        uint8_t* file_data = (uint8_t*)malloc(file_size);
+        if (file_data == NULL) {
+            perror("Memory allocation failed");
+            fclose(file);
+            exit(EXIT_FAILURE);
+        }
+
+        // Read the file content
+        size_t bytes_read = fread(file_data, 1, file_size, file);
+        if (bytes_read != file_size) {
+            perror("Failed to read the file");
+            free(file_data);
+            fclose(file);
+            exit(EXIT_FAILURE);
+        }
+
+        // Use memcpy to copy the file content into memory
+        memcpy(memory + dtb_addr, file_data, file_size);
+
+        // Close the file and free memory
+        fclose(file);
+        free(file_data);
+
+        return 0;
+    };
+    
+
     uint64_t get_mem_d(uint64_t addr)
     {
         return *(uint64_t*)(ALISS::memory + addr);
@@ -106,28 +210,30 @@ namespace ALISS
 
     void set_mem_d(uint64_t addr, uint64_t data)
     {
-        uint64_t* memory64  = (uint64_t*)ALISS::memory;
-        memory64[addr /  8] = data;
+        uint64_t* memory64  = (uint64_t*)(ALISS::memory + addr);
+        *memory64 = data;
+ 
         return;
     };
 
     void set_mem_w(uint64_t addr, uint32_t data)
     {
-        uint32_t* memory32  = (uint32_t*)ALISS::memory;
-        memory32[addr / 4] = data;
+        uint32_t* memory32  = (uint32_t*)(ALISS::memory + addr);
+        *memory32 = data;
         return;
     };
 
     void set_mem_h(uint64_t addr, uint16_t data)
     {
-        uint16_t* memory16  = (uint16_t*)ALISS::memory;
-        memory16[addr / 2] = data;
+        uint16_t* memory16  = (uint16_t*)(ALISS::memory + addr);
+        *memory16 = data;
         return;
     };
 
     void set_mem_b(uint64_t addr, uint8_t data)
     {
-        memory[addr] = data;
+        uint8_t* memory8 = (uint8_t*)(ALISS::memory + addr);
+        *memory8 = data;
         return;
     };
 
@@ -138,7 +244,7 @@ namespace ALISS
 
     void ID_EX_WB(uint32_t insn)
     {
-
+        reg[0] = 0; //ZERO always return 0
         ALISS::next_pc = ALISS::pc + 4;
         uint8_t decode = insn & 0x7f; //last 7 bit
 
@@ -149,6 +255,14 @@ namespace ALISS
                 uint64_t rd = ((insn >> 7) & 0x1f);
                 uint64_t rs1 = ((insn  >> 15) & 0x1f);
                 uint64_t imm = ((insn >> 20) & 0xfff);
+
+               if(reg[rs1] + sext(imm,12) == 0x10000005)
+               {
+                   reg[rd] = 0x60;
+                   break;
+               }
+
+
                 switch ((insn >> 12) & 7)
                 {
                     case 0: //LB
@@ -214,7 +328,7 @@ namespace ALISS
                     }
                     case 0x1: //SLLI
                     {
-                        uint64_t shamt = imm & 0x1f; //[24:20]
+                        uint64_t shamt = imm & 0x3f; //[25:20]
                         reg[rd] = reg[rs1] << shamt;
                         break;
                     }
@@ -225,7 +339,7 @@ namespace ALISS
                     }
                     case 0x3: //SLTUI
                     {
-                        reg[rd] = (reg[rs1] < imm);
+                        reg[rd] = (reg[rs1] < sext(imm,12));
                         break;
                     }
                     case 0x4: //XORI
@@ -235,15 +349,15 @@ namespace ALISS
                     }
                     case 0x5: //SRLI & SRAI
                     {
-                        uint64_t shamt = imm & 0x1f; //[24:20]
-                        switch ((insn >> 25) & 0x7f)
+                        uint64_t shamt = imm & 0x3f; //[25:20]
+                        switch ((insn >> 26) & 0x7f)
                         {
                             case 0x0 : //SRLI
                             {
                                 reg[rd] =  reg[rs1] >> shamt;
                                 break;
                             }
-                            case 0x20 : //SRAI
+                            case 0x10 : //SRAI
                             {
                                 reg[rd] =  (int64_t)reg[rs1] >> shamt;
                                 break;
@@ -297,23 +411,23 @@ namespace ALISS
                     }
                     case 0x1: //SLLIW
                     {
-                        uint64_t shamt = imm & 0x1f; //[24:20]
-                        reg[rd] = sext((reg[rs1] << shamt)  & 0xffffffff,32);
+                        uint64_t shamt = imm & 0x3f; //[25:20]
+                        reg[rd] = sext(((reg[rs1]  & 0xffffffff) << shamt),32);
                         break;
                     }
                     case 0x5: //SRLIW & SRAIW
                     {
-                        uint64_t shamt = imm & 0x1f; //[24:20]
+                        uint64_t shamt = imm & 0x3f; //[25:20]
                         switch ((insn >> 25) & 0x7f)
                         {
                             case 0x0 : //SRLIW
                             {
-                                reg[rd] =  sext((reg[rs1] >> shamt) & 0xffffffff,32);
+                                reg[rd] =  sext(((reg[rs1] & 0xffffffff) >> shamt) , 32);
                                 break;
                             }
                             case 0x20 : //SRAIW
                             {
-                                reg[rd] =  sext(((int64_t)reg[rs1] >> shamt) & 0xffffffff,32);
+                                reg[rd] =  sext(((int32_t)(reg[rs1] & 0xffffffff) >> shamt) , 32);
                                 break;
                             }
                            default:
@@ -341,6 +455,13 @@ namespace ALISS
 
                 uint64_t imm = ( ( insn & 0xfe000000 ) >> 20 ) | // [11:5]
                                ( ( insn >> 7 ) & 0x1f ); //[4:0]
+
+                if(reg[rs1] + sext(imm,12) == 0x10000000)
+                {
+                    printf("%c",(uint8_t)reg[rs2]);
+                    break;
+                }
+
                 switch ((insn >> 12) & 7)
                 {
                     case 0: //SB
@@ -559,94 +680,187 @@ namespace ALISS
                 }
                 break;
             }
-            case 0x33: //OP
+case 0x33: //OP
+{
+    uint64_t rd = ((insn >> 7) & 0x1f);
+    uint64_t rs1 = ((insn  >> 15) & 0x1f);
+    uint64_t rs2 = ((insn  >> 20) & 0x1f);
+    if(((insn >> 25) & 0x7f) == 0x1) //M-extension
+    {
+        switch ((insn >> 12) & 7)
+        {
+            case 0x0: //MUL
             {
-                uint64_t rd = ((insn >> 7) & 0x1f);
-                uint64_t rs1 = ((insn  >> 15) & 0x1f);
-                uint64_t rs2 = ((insn  >> 20) & 0x1f);
-                switch ((insn >> 12) & 7)
+                reg[rd] = (int64_t)reg[rs1] * (int64_t)reg[rs2];
+
+                break;
+            }
+            case 0x1: //MULH
+            {
+                reg[rd] = mulh(reg[rs1],reg[rs2]);
+                break;
+            }
+            case 0x2: //MULHSU
+            {
+                reg[rd] = mulhsu(reg[rs1],reg[rs2]);
+                break;
+            }
+            case 0x3: //MULHU
+            {
+                reg[rd] = mulhu(reg[rs1],reg[rs2]);
+                break;
+            }
+            case 0x4: //DIV
+            {
+                if(reg[rs2] == 0) //can't div 0
                 {
-                    case 0x0: //ADD or SUB
+                    reg[rd] = -1;
+                }
+                else if((int64_t)reg[rs1] == INT64_MIN && (int64_t)reg[rs2] == -1) // may overflow
+                {
+                    reg[rd] = reg[rs1];
+                }
+                else
+                {
+                    reg[rd] = (int64_t)reg[rs1] / (int64_t)reg[rs2];
+                }
+                break;
+            }
+            case 0x5: //DIVU
+            {
+                if(reg[rs2] == 0) //can't div 0
+                {
+                    reg[rd] = -1;
+                }
+                else
+                {
+                    reg[rd] = reg[rs1] / reg[rs2];
+                }
+                break;
+            }
+            case 0x6: //REM
+            {
+                if(reg[rs2] == 0) //can't div 0
+                {
+                    reg[rd] = reg[rs1];
+                }
+                else if((int64_t)reg[rs1] == INT64_MIN && (int64_t)reg[rs2] == -1) // may overflow
+                {
+                    reg[rd] = 0;
+                }
+                else
+                {
+                    reg[rd] = (int64_t)reg[rs1] % (int64_t)reg[rs2];
+                }
+                break;
+            }
+            case 0x7: //REMU
+            {
+                if(reg[rs2] == 0) //can't div 0
+                {
+                    reg[rd] = reg[rs1];
+                }
+                else
+                {
+                    reg[rd] = reg[rs1] % reg[rs2];
+                }
+                break;
+            }
+            default:
+            {
+                 printf("Illegal instruction");
+                 printf("%x\n",insn);
+                 break;
+            }
+        }
+
+    }
+    else
+                {
+                    switch ((insn >> 12) & 7)
                     {
-                        switch ((insn >> 25) & 0x7f)
+                        case 0x0: //ADD or SUB
                         {
-                           case 0x0 :
-                           {
-                                reg[rd] =  reg[rs1] + reg[rs2];
-                                break;
-                           }
-                           case 0x20 :
-                           {
-                                reg[rd] = reg[rs1] - reg[rs2];
-                                break;
-                           }
-                           default:
-                           {
-                                printf("Illegal instruction");
-                                printf("%x\n",insn);
-                                break;
-                           }
+                            switch ((insn >> 25) & 0x7f)
+                            {
+                               case 0x0 :
+                               {
+                                    reg[rd] =  reg[rs1] + reg[rs2];
+                                    break;
+                               }
+                               case 0x20 :
+                               {
+                                    reg[rd] = reg[rs1] - reg[rs2];
+                                    break;
+                               }
+                               default:
+                               {
+                                    printf("Illegal instruction");
+                                    printf("%x\n",insn);
+                                    break;
+                               }
+                            }
+                            break;
                         }
-                        break;
-                    }
-                    case 0x1: //SLL
-                    {
-                        reg[rd] = reg[rs1] << reg[rs2];
-                        break;
-                    }
-                    case 0x2: //SLT
-                    {
-                        reg[rd] = ((int64_t)reg[rs1] < (int64_t)reg[rs2]);
-                        break;
-                    }
-                    case 0x3: //SLTU
-                    {
-                        reg[rd] = (reg[rs1] < reg[rs2]);
-                        break;
-                    }
-                    case 0x4: //XOR
-                    {
-                        reg[rd] = reg[rs1] ^ reg[rs2];
-                        break;
-                    }
-                    case 0x5: //SRL or SRA
-                    {
-                        switch ((insn >> 25) & 0x7f)
+                        case 0x1: //SLL
                         {
-                           case 0x0 : //SRL
-                           {
-                                reg[rd] =  reg[rs1] >> reg[rs2];
-                                break;
-                           }
-                           case 0x20 : //SRA
-                           {
-                                reg[rd] = (int64_t)reg[rs1] >> reg[rs2];
-                                break;
-                           }
-                           default:
-                           {
-                                printf("Illegal instruction");
-                                printf("%x\n",insn);
-                                break;
-                           }
+                            reg[rd] = reg[rs1] << reg[rs2];
+                            break;
                         }
-                        break;
-                    }
-                    case 0x6: //OR
-                    {
-                        reg[rd] = reg[rs1] | reg[rs2];
-                        break;
-                    }
-                    case 0x7: //AND
-                    {
-                        reg[rd] = reg[rs1] & reg[rs2];
-                        break;
-                    }
-                    default:
-                    {
-                        printf("Illegal instruction");
-                        printf("%x\n",insn);
-                        break;
+                        case 0x2: //SLT
+                        {
+                            reg[rd] = ((int64_t)reg[rs1] < (int64_t)reg[rs2]);
+                            break;
+                        }
+                        case 0x3: //SLTU
+                        {
+                            reg[rd] = (reg[rs1] < reg[rs2]);
+                            break;
+                        }
+                        case 0x4: //XOR
+                        {
+                            reg[rd] = reg[rs1] ^ reg[rs2];
+                            break;
+                        }
+                        case 0x5: //SRL or SRA
+                        {
+                            switch ((insn >> 25) & 0x7f)
+                            {
+                               case 0x0 : //SRL
+                               {
+                                    reg[rd] =  reg[rs1] >> reg[rs2];
+                                    break;
+                               }
+                               case 0x20 : //SRA
+                               {
+                                    reg[rd] = (int64_t)reg[rs1] >> reg[rs2];
+                                    break;
+                               }
+                               default:
+                               {
+                                    printf("Illegal instruction");
+                                    printf("%x\n",insn);
+                                    break;
+                               }
+                            }
+                            break;
+                        }
+                        case 0x6: //OR
+                        {
+                            reg[rd] = reg[rs1] | reg[rs2];
+                            break;
+                        }
+                        case 0x7: //AND
+                        {
+                            reg[rd] = reg[rs1] & reg[rs2];
+                            break;
+                        }
+                        default:
+                        {
+                            printf("Illegal instruction");
+                            printf("%x\n",insn);
+                            break;
+                        }
                     }
                 }
                 break;
@@ -663,65 +877,143 @@ namespace ALISS
                 uint64_t rd = ((insn >> 7) & 0x1f);
                 uint64_t rs1 = ((insn  >> 15) & 0x1f);
                 uint64_t rs2 = ((insn  >> 20) & 0x1f);
-                switch ((insn >> 12) & 7)
+                if(((insn >> 25) & 0x7f) == 0x1) //M-extension
                 {
-                    case 0x0: //ADDW or SUBW
+                    switch ((insn >> 12) & 7)
                     {
-                        switch ((insn >> 25) & 0x7f)
+                        case 0x0: //MULW
                         {
-                           case 0x0 : //ADDW
-                           {
-                                reg[rd] =  sext((reg[rs1] + reg[rs2]) & 0xffffffff,32);
-                                break;
-                           }
-                           case 0x20 :  //SUBW
-                           {
-                                reg[rd] = sext((reg[rs1] - reg[rs2]) &  0xffffffff,32);
-                                break;
-                           }
-                           default:
-                           {
+                            reg[rd] = sext((int64_t)reg[rs1] * (int64_t)reg[rs2] & 0xffffffff,32);
 
-                                printf("Illegal instruction");
-                                printf("%x\n",insn);
-                                break;
-                           }
+                            break;
                         }
-                        break;
-                    }
-                    case 0x1: //SLLW
-                    {
-                        reg[rd] = sext((reg[rs1] << reg[rs2])  & 0xffffffff,32);
-                        break;
-                    }
-                    case 0x5: //SRLW or SRAW
-                    {
-                        switch ((insn >> 25) & 0x7f)
+                        case 0x4: //DIVW
                         {
-                           case 0x0 : //SRLW
-                           {
-                                reg[rd] =  sext((reg[rs1] >> reg[rs2]) &  0xffffffff,32);
-                                break;
-                           }
-                           case 0x20 : //SRAW
-                           {
-                                reg[rd] = sext(((int64_t)reg[rs1] >> reg[rs2]) & 0xffffffff,32);
-                                break;
-                           }
-                           default:
-                           {
-                                printf("Illegal instruction");
-                                printf("%x\n",insn);
-                                break;
-                           }
+                            if(reg[rs2] == 0) //can't div 0
+                            {
+                                reg[rd] = -1;
+                            }
+                            else if((int64_t)reg[rs1] == INT32_MIN && (int64_t)reg[rs2] == -1) // may overflow
+                            {
+                                reg[rd] = reg[rs1];
+                            }
+                            else
+                            {
+                             reg[rd] = sext(((int32_t)(reg[rs1]  & 0xffffffff)) / ((int32_t)(reg[rs2] & 0xffffffff)),32);
+                            }
+                            break;
                         }
-                        break;
+                        case 0x5: //DIVUW
+                        {
+                            if(reg[rs2] == 0) //can't div 0
+                            {
+                                reg[rd] = -1;
+                            }
+                            else
+                            {
+                                reg[rd] = sext((reg[rs1] & 0xffffffff) / (reg[rs2] & 0xffffffff),32);
+                            }
+                            break;
+                        }
+                        case 0x6: //REMW
+                        {
+                            if(reg[rs2] == 0) //can't div 0
+                            {
+                                reg[rd] = reg[rs1];
+                            }
+                            else if((int64_t)reg[rs1] == INT32_MIN && (int64_t)reg[rs2] == -1) // may overflow
+                            {
+                                reg[rd] = 0;
+                            }
+                            else
+                            {
+                                reg[rd] = sext(((int32_t)(reg[rs1]  & 0xffffffff)) % ((int32_t)(reg[rs2] & 0xffffffff)),32);
+                            }
+                            break;
+                        }
+                        case 0x7: //REMUW
+                        {
+                            if(reg[rs2] == 0) //can't div 0
+                            {
+                                reg[rd] = reg[rs1];
+                            }
+                            else
+                            {
+                                reg[rd] = sext((reg[rs1] & 0xffffffff) % (reg[rs2] & 0xffffffff),32);
+                            }
+                            break;
+                        }
+                        default:
+                        {
+                             printf("Illegal instruction");
+                             printf("%x\n",insn);
+                             break;
+                        }
                     }
-                    default:
+
+                }
+                else
+                {
+                    switch ((insn >> 12) & 7)
                     {
-                        printf("Illegal instruction");
-                        printf("%x\n",insn);
-                        break;
+                        case 0x0: //ADDW or SUBW
+                        {
+                            switch ((insn >> 25) & 0x7f)
+                            {
+                               case 0x0 : //ADDW
+                               {
+                                    reg[rd] =  sext((reg[rs1] + reg[rs2]) & 0xffffffff,32);
+                                    break;
+                               }
+                               case 0x20 :  //SUBW
+                               {
+                                    reg[rd] = sext((reg[rs1] - reg[rs2]) &  0xffffffff,32);
+                                    break;
+                               }
+                               default:
+                               {
+
+                                    printf("Illegal instruction");
+                                    printf("%x\n",insn);
+                                    break;
+                               }
+                            }
+                            break;
+                        }
+                        case 0x1: //SLLW
+                        {
+                            reg[rd] = sext(((reg[rs1]  & 0xffffffff) << (reg[rs2] & 0x1f)),32);
+                            break;
+                        }
+                        case 0x5: //SRLW or SRAW
+                        {
+                            switch ((insn >> 25) & 0x7f)
+                            {
+                               case 0x0 : //SRLW
+                               {
+                                    reg[rd] =  sext(((reg[rs1] &  0xffffffff) >> (reg[rs2] & 0x1f)),32);
+                                    break;
+                               }
+                               case 0x20 : //SRAW
+                               {
+                                    reg[rd] = sext(((int32_t)(reg[rs1] & 0xffffffff) >> (reg[rs2] & 0x1f)),32);
+                                    break;
+                               }
+                               default:
+                               {
+                                    printf("Illegal instruction");
+                                    printf("%x\n",insn);
+                                    break;
+                               }
+                            }
+                            break;
+                        }
+                        default:
+                        {
+                            printf("Illegal instruction");
+                            printf("%x\n",insn);
+                            break;
+                        }
                     }
                 }
                 break;
@@ -745,6 +1037,9 @@ namespace ALISS
                     }
                     case 1: //BNE
                     {
+
+                        if(debug_mode)
+                            insn_type = "BNE";
                         if(reg[rs1] != reg[rs2])
                             next_pc = pc + sext(imm,13);
                         break;
@@ -787,8 +1082,9 @@ namespace ALISS
                 uint64_t rd = ((insn >> 7) & 0x1f);
                 uint64_t rs1 = ((insn  >> 15) & 0x1f);
                 uint64_t imm = ((insn >> 20) & 0xfff);
-                reg[rd] = next_pc;
+                uint64_t temp = next_pc;
                 next_pc = reg[rs1] + sext(imm,12);
+                reg[rd] = temp;
 
                 break;
             }
@@ -818,6 +1114,14 @@ namespace ALISS
                         {
                             case 0x0: //ecall
                             {
+#ifdef BAREMETAL
+                                if(reg[17] == 93) //exit
+                                {
+                                    printf("return value = %d\n",(int)reg[10]);
+                                    exit(reg[10]);
+                                }
+#endif
+                                
                                 csr[0x341] = pc; //epc = pc
                                 next_pc = csr[0x305]; //mtvec = 0x305
                                 break;
@@ -899,7 +1203,6 @@ namespace ALISS
                 break;
             }
         }
-        ///implement insn here 
     };
 
     void run_pipe()
@@ -907,9 +1210,8 @@ namespace ALISS
         uint32_t insn = ALISS::IF();
         ALISS::ID_EX_WB(insn);
 
-    #ifdef INSN_DEBUG
+    if(debug_mode)
         dump_insn(insn);
-    #endif
 
         pc = next_pc;
     };
